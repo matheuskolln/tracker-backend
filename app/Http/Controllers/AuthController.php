@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
@@ -25,7 +26,7 @@ class AuthController extends Controller
 
         return response()->json([
             'user' => $user,
-            'token' => $user->createToken('auth_token')->plainTextToken
+            'token' => $user->createToken('auth_token', ['*'], now()->addHours(2))->plainTextToken
         ]);
     }
 
@@ -36,14 +37,28 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
+        $ip = $request->ip();
+        $key = 'login_attempts:' . $ip;
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return response()->json([
+                'message' => 'Too many login attempts. Try again in ' . RateLimiter::availableIn($key) . ' seconds.'
+            ], 429);
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($key, 60);
             throw ValidationException::withMessages(['email' => 'Invalid credentials.']);
         }
 
+        RateLimiter::clear($key);
+
+        $user->update(['last_login_at' => now()]);
+
         return response()->json([
-            'token' => $user->createToken('auth_token')->plainTextToken
+            'token' => $user->createToken('auth_token', ['*'], now()->addHours(2))->plainTextToken
         ]);
     }
 
