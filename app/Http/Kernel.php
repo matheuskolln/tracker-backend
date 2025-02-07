@@ -9,5 +9,6 @@ class Kernel extends \Illuminate\Foundation\Http\Kernel {
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];
 }
