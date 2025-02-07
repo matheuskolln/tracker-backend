@@ -55,6 +55,8 @@ class TaskController extends Controller
                     }
                 },
             ],
+            'working'     => 'sometimes|boolean',
+            'time_spent'  => 'sometimes|integer',
         ]);
 
         $task->fill($request->all())->save();
