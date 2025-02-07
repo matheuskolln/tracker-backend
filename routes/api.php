@@ -23,9 +23,4 @@ Route::middleware('auth:sanctum')->prefix('tasks')->group(function () {
     Route::get('{task}', [TaskController::class, 'show']); // Show a specific task
     Route::put('{task}', [TaskController::class, 'update']); // Update task
     Route::delete('{task}', [TaskController::class, 'destroy']); // Delete task
-    Route::patch('{task}/status', [TaskController::class, 'changeStatus']); // Change task status
-    Route::post('{task}/start-timer', [TaskTimeController::class, 'startTimer']); // Start timer
-    Route::post('{task}/stop-timer', [TaskTimeController::class, 'stopTimer']); // Stop timer
-    Route::post('{task}/manual-time', [TaskTimeController::class, 'manualTimeEntry']); // Manual time entry
-    Route::get('{task}/times', [TaskTimeController::class, 'index']); // Get all task times
 });

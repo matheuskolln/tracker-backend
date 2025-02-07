@@ -10,25 +10,24 @@ class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Auth::user()->tasks()->get();
+        $tasks = Auth::user()->tasks()->orderBy('created_at', 'desc')->get();
         return response()->json($tasks);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
+        $validatedData = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date'  => 'nullable|date',
+            'end_date'    => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $task = Auth::user()->tasks()->create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'status' => 'To Do'
-        ]);
+        $task = Auth::user()->tasks()->create(array_merge($validatedData, ['status' => 'To Do']));
 
         return response()->json($task, 201);
     }
+
 
     public function show($id)
     {
@@ -39,15 +38,30 @@ class TaskController extends Controller
     public function update(Request $request, $id)
     {
         $task = Auth::user()->tasks()->findOrFail($id);
-        if ($request->has('title')) {
-            $task->title = $request->title;
-        }
-        if ($request->has('description')) {
-            $task->description = $request->description;
-        }
-        $task->save();
+
+        $request->validate([
+            'title'       => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'status'      => 'sometimes|in:To Do,In Progress,Done',
+            'start_date'  => 'sometimes|date|nullable',
+            'end_date'    => [
+                'sometimes',
+                'date',
+                'nullable',
+                function ($attribute, $value, $fail) use ($task) {
+                    $startDate = $task->start_date ?? request('start_date');
+                    if ($startDate && $value < $startDate) {
+                        $fail('The end date must be after or equal to the start date.');
+                    }
+                },
+            ],
+        ]);
+
+        $task->fill($request->all())->save();
+
         return response()->json($task);
     }
+
 
     public function destroy($id)
     {
@@ -55,18 +69,5 @@ class TaskController extends Controller
         $task->delete();
 
         return response()->json(['message' => 'Task deleted successfully']);
-    }
-
-    public function changeStatus(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|in:To Do,In Progress,Done',
-        ]);
-
-        $task = Auth::user()->tasks()->findOrFail($id);
-        $task->status = $request->status;
-        $task->save();
-
-        return response()->json($task);
     }
 }
