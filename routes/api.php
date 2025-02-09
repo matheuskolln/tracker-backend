@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskTimeController;
+use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Password;
@@ -39,32 +40,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     })->middleware('throttle:6,1')->name('verification.send');
 });
 
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
 
-Route::post('/forgot-password', function (Request $request) {
-    $request->validate(['email' => 'required|email']);
 
-    $status = Password::sendResetLink($request->only('email'));
-
-    return $status === Password::RESET_LINK_SENT
-        ? response()->json(['message' => 'Recuperation email sent.'])
-        : response()->json(['message' => 'Error sending email.'], 400);
-})->name('password.email');
-
-Route::post('/reset-password', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'token' => 'required',
-        'password' => 'required|min:8|confirmed'
-    ]);
-
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function ($user, $password) {
-            $user->forceFill(['password' => Hash::make($password)])->save();
-        }
-    );
-
-    return $status === Password::PASSWORD_RESET
-        ? response()->json(['message' => 'Password reset successfully!'])
-        : response()->json(['message' => 'Error resetting password.'], 400);
-})->name('password.reset');
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/workspaces', [WorkspaceController::class, 'index']);
+    Route::post('/workspaces', [WorkspaceController::class, 'store']);
+    Route::get('/workspaces/{id}', [WorkspaceController::class, 'show']);
+    Route::post('/workspaces/{id}/add-user', [WorkspaceController::class, 'addUser']);
+    Route::post('/workspaces/{id}/remove-user', [WorkspaceController::class, 'removeUser']);
+    Route::get('/workspaces/{workspaceId}/tasks', [TaskController::class, 'index']);
+});

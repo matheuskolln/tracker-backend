@@ -35,6 +35,16 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function tasks()
     {
-        return $this->hasMany(Task::class);
+        return $this->belongsToMany(Task::class, 'task_user')->withTimestamps();
+    }
+
+    public function workspaces()
+    {
+        return $this->belongsToMany(Workspace::class, 'workspace_user');
+    }
+
+    public function ownedWorkspaces()
+    {
+        return $this->hasMany(Workspace::class, 'owner_id');
     }
 }
