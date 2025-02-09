@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('last_login_at')->nullable();
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->renameColumn('user_id', 'created_by');
         });
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('last_login_at');
+        Schema::table('created_by_on_users', function (Blueprint $table) {
+            $table->renameColumn('created_by', 'user_id');
         });
     }
 };
