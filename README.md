@@ -1,5 +1,4 @@
-# Tracker Backend
-
+# Tracker Backend  ![Tests](https://github.com/matheuskolln/tracker-backend/actions/workflows/laravel-ci.yml/badge.svg)
 Tracker Backend is a RESTful API built with Laravel to manage tasks and track time efficiently. The API enables users to create, assign, and monitor tasks while keeping track of time spent on each activity.
 
 ## Architecture
