@@ -23,7 +23,11 @@ class TaskController extends Controller
             'end_date'    => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $task = Auth::user()->tasks()->create(array_merge($validatedData, ['status' => 'To Do']));
+        $user_id = Auth::id();
+        $task = new Task($validatedData);
+        $task->created_by = $user_id;
+        $task->save();
+
 
         return response()->json($task, 201);
     }
@@ -31,13 +35,14 @@ class TaskController extends Controller
 
     public function show($id)
     {
-        $task = Auth::user()->tasks()->findOrFail($id);
+        $task = Task::findOrFail($id);
         return response()->json($task);
     }
 
     public function update(Request $request, $id)
     {
-        $task = Auth::user()->tasks()->findOrFail($id);
+        $task = Task::findOrFail($id);
+
 
         $request->validate([
             'title'       => 'sometimes|string|max:255',
@@ -57,17 +62,24 @@ class TaskController extends Controller
             ],
             'working'     => 'sometimes|boolean',
             'time_spent'  => 'sometimes|integer',
+            'user_ids'    => 'sometimes|array',
+            'user_ids.*'  => 'exists:users,id', // Cada ID deve existir na tabela `users`
         ]);
 
-        $task->fill($request->all())->save();
+        $task->fill($request->except('user_ids'))->save();
 
-        return response()->json($task);
+        if ($request->has('user_ids')) {
+            $task->users()->sync($request->user_ids);
+        }
+
+        return response()->json($task->load('users'));
     }
+
 
 
     public function destroy($id)
     {
-        $task = Auth::user()->tasks()->findOrFail($id);
+        $task = Task::findOrFail($id);
         $task->delete();
 
         return response()->json(['message' => 'Task deleted successfully']);
