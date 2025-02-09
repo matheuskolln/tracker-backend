@@ -41,4 +41,11 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function markEmailAsVerified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => now(),
+        ]);
+    }
 }

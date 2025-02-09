@@ -17,7 +17,8 @@ class Task extends Model
         'start_date',
         'end_date',
         'working',
-        'time-spent'
+        'time_spent',
+        'workspace_id',
     ];
 
     public function createdBy()

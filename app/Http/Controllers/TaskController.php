@@ -49,6 +49,8 @@ class TaskController extends Controller
 
     public function show($id)
     {
+        $task = Task::findOrFail($id);
+        $workspace = $task->workspace;
         if (!$workspace->users->contains(Auth::id())) {
             return response()->json(['error' => 'Você não tem permissão para visualizar tarefas neste workspace.'], 403);
         }
