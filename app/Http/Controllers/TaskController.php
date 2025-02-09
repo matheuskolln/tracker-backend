@@ -49,6 +49,9 @@ class TaskController extends Controller
 
     public function show($id)
     {
+        if (!$workspace->users->contains(Auth::id())) {
+            return response()->json(['error' => 'Você não tem permissão para visualizar tarefas neste workspace.'], 403);
+        }
         $task = Task::findOrFail($id);
         $task->load('users')->load('workspace');
         return response()->json($task);
@@ -57,6 +60,10 @@ class TaskController extends Controller
     public function update(Request $request, $id)
     {
         $task = Task::findOrFail($id);
+
+        if (!$task->workspace->users->contains(Auth::id())) {
+            return response()->json(['error' => 'Você não tem permissão para editar tarefas neste workspace.'], 403);
+        }
 
 
         $request->validate([
@@ -95,6 +102,11 @@ class TaskController extends Controller
     public function destroy($id)
     {
         $task = Task::findOrFail($id);
+
+        if (!$task->workspace->users->contains(Auth::id())) {
+            return response()->json(['error' => 'Você não tem permissão para deletar tarefas neste workspace.'], 403);
+        }
+
         $task->delete();
 
         return response()->json(['message' => 'Task deleted successfully']);
