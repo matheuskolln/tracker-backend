@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskTimeController;
+use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -42,3 +42,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
+
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/workspaces', [WorkspaceController::class, 'index']);
+    Route::post('/workspaces', [WorkspaceController::class, 'store']);
+    Route::get('/workspaces/{id}', [WorkspaceController::class, 'show']);
+    Route::post('/workspaces/{id}/add-user', [WorkspaceController::class, 'addUser']);
+    Route::post('/workspaces/{id}/remove-user', [WorkspaceController::class, 'removeUser']);
+    Route::get('/workspaces/{workspaceId}/tasks', [TaskController::class, 'index']);
+});
