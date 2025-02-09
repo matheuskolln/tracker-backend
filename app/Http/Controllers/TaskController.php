@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +11,13 @@ class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Auth::user()->tasks()->orderBy('created_at', 'desc')->get();
+        $workspaceId = request('workspace_id');
+        $workspace = Workspace::findOrFail($workspaceId);
+        if (!$workspace->users->contains(Auth::id())) {
+            return response()->json(['error' => 'Você não tem permissão para visualizar tarefas neste workspace.'], 403);
+        }
+
+        $tasks = $workspace->tasks;
         return response()->json($tasks);
     }
 
@@ -21,11 +28,18 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'start_date'  => 'nullable|date',
             'end_date'    => 'nullable|date|after_or_equal:start_date',
+            "workspace_id" => "required|exists:workspaces,id",
         ]);
 
-        $user_id = Auth::id();
+
+        $workspace = Workspace::findOrFail($request->workspace_id);
+        if (!$workspace->users->contains(Auth::id())) {
+            return response()->json(['error' => 'Você não tem permissão para criar tarefas neste workspace.'], 403);
+        }
         $task = new Task($validatedData);
-        $task->created_by = $user_id;
+        $task->created_by = Auth::id();
+        $task->status = 'To Do';
+        $task->workspace_id = $workspace->id;
         $task->save();
 
 
@@ -36,6 +50,7 @@ class TaskController extends Controller
     public function show($id)
     {
         $task = Task::findOrFail($id);
+        $task->load('users')->load('workspace');
         return response()->json($task);
     }
 
