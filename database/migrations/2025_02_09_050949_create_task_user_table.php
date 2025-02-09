@@ -19,9 +19,4 @@ return new class extends Migration {
     {
         Schema::dropIfExists('task_user');
     }
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'task_user')->withTimestamps();
-    }
 };

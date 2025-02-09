@@ -15,7 +15,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('created_by_on_users', function (Blueprint $table) {
+        Schema::table('tasks', function (Blueprint $table) {
             $table->renameColumn('created_by', 'user_id');
         });
     }
